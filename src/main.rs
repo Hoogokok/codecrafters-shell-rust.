@@ -15,8 +15,7 @@ fn main() {
         //<command_name>: command not found for an unrecognized command
         let command = input.trim();
         match command {
-            "exit" => {
-                println!("Goodbye!");
+            "exit 0" => {
                 return;
             }
             _ => {
