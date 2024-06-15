@@ -39,7 +39,16 @@ fn process_command(command_parts: Vec<&str>, command: &str) -> ControlFlow<()> {
         "pwd" => {
             let current_dir = env::current_dir().unwrap();
             println!("{}", current_dir.display());
-        }
+        },
+        "cd" => {
+            let new_dir = command_parts[1];
+            let path = Path::new(new_dir);
+            if path.is_dir() {
+                env::set_current_dir(&path).unwrap();
+            } else {
+                eprintln!("cd: {}: No such file or directory", new_dir);
+            }
+        },
         _ => {
             //외부 명령어 실행
             let output = Command::new(command_parts[0])
