@@ -1,10 +1,9 @@
 use std::env;
 use std::fs;
-#[allow(unused_imports)]
 use std::io::{self, Write};
 use std::ops::ControlFlow;
 use std::path::Path;
-
+use std::process::Command;
 fn main() {
     loop {
         // Uncomment this block to pass the first stage
@@ -35,22 +34,37 @@ fn process_command(command_parts: Vec<&str>, command: &str) -> ControlFlow<()> {
             println!("{}", command_parts[1..].join(" "));
         }
         "type" => {
-            identify_command(command_parts);
+            identify_command(command_parts[1..].to_vec());
         }
         _ => {
-            eprintln!("{}: command not found", command);
+            //외부 명령어 실행
+            let output = Command::new(command_parts[0])
+                .args(&command_parts[1..])
+                .output();
+
+            match output {
+                Ok(output) => {
+                    if !output.stdout.is_empty() {
+                        println!("{}", String::from_utf8_lossy(&output.stdout).trim());
+                    }
+                    if !output.stderr.is_empty() {
+                        eprintln!("{}: command not found", command);
+                    }
+                }
+                Err(_e) => {
+                    eprintln!("{}: command not found", command);
+                }
+            }
         }
     }
     ControlFlow::Continue(())
 }
 
 fn identify_command(command_parts: Vec<&str>) {
-    let command = command_parts[1];
+    let command = command_parts[0];
     match command {
         "exit" => println!("exit is a shell builtin"),
-
         "echo" => println!("echo is a shell builtin"),
-
         "type" => println!("type is a shell builtin"),
         "cat" => println!("cat is /bin/cat"),
         _ => {
