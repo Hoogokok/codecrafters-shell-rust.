@@ -35,20 +35,12 @@ fn process_command(command_parts: Vec<&str>, command: &str) -> ControlFlow<()> {
         }
         "type" => {
             identify_command(command_parts[1..].to_vec());
-        },
+        }
         "pwd" => {
             let current_dir = env::current_dir().unwrap();
             println!("{}", current_dir.display());
-        },
-        "cd" => {
-            let new_dir = command_parts[1];
-            let path = Path::new(new_dir);
-            if path.is_dir() {
-                env::set_current_dir(&path).unwrap();
-            } else {
-                eprintln!("cd: {}: No such file or directory", new_dir);
-            }
-        },
+        }
+        "cd" => change_directory(&command_parts),
         _ => {
             //외부 명령어 실행
             let output = Command::new(command_parts[0])
@@ -71,6 +63,19 @@ fn process_command(command_parts: Vec<&str>, command: &str) -> ControlFlow<()> {
         }
     }
     ControlFlow::Continue(())
+}
+
+fn change_directory(command_parts: &Vec<&str>) {
+    let new_dir = command_parts[1];
+    let path = Path::new(new_dir);
+    match (path.is_dir(), new_dir) {
+        (true, _) => env::set_current_dir(&path).unwrap(),
+        (_, "~") => {
+            let home_dir = env::var("HOME").unwrap();
+            env::set_current_dir(&home_dir).unwrap();
+        },
+        _ => eprintln!("cd: {}: No such file or directory", new_dir.trim()),
+    }
 }
 
 fn identify_command(command_parts: Vec<&str>) {
