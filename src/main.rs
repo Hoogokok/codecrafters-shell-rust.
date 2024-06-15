@@ -1,6 +1,9 @@
+use std::env;
+use std::fs;
 #[allow(unused_imports)]
 use std::io::{self, Write};
 use std::ops::ControlFlow;
+use std::path::Path;
 
 fn main() {
     loop {
@@ -29,7 +32,7 @@ fn process_command(command_parts: Vec<&str>, command: &str) -> ControlFlow<()> {
             return ControlFlow::Break(());
         }
         "echo" => {
-            println!("{}", command_parts[1..].join(" "));   
+            println!("{}", command_parts[1..].join(" "));
         }
         "type" => {
             identify_command(command_parts);
@@ -42,23 +45,30 @@ fn process_command(command_parts: Vec<&str>, command: &str) -> ControlFlow<()> {
 }
 
 fn identify_command(command_parts: Vec<&str>) {
-    match command_parts[1] {
-        "exit" => {
-            println!("exit is a shell builtin");
-        }
-        "echo" => {
-            println!("echo is a shell builtin");
-        }
-        "type" => {
-            println!("type is a shell builtin");
-        }
-        "cat" => {
-            println!("cat is /bin/cat");
-        }
+    let command = command_parts[1];
+    match command {
+        "exit" => println!("exit is a shell builtin"),
+
+        "echo" => println!("echo is a shell builtin"),
+
+        "type" => println!("type is a shell builtin"),
+        "cat" => println!("cat is /bin/cat"),
         _ => {
-            println!("{}: not found", command_parts[1]);
+            let path = env::var("PATH").unwrap();
+            let paths: Vec<&str> = path.split(':').collect();
+            let mut found = false;
+            for p in paths {
+                let full_path = Path::new(p).join(command);
+                if fs::metadata(full_path.clone()).is_ok() {
+                    println!("{} is {}", command, full_path.display());
+                    found = true;
+                    break;
+                }
+            }
+            if !found {
+                println!("{}: not found", command);
+            }
         }
-    
     }
 }
 // exit 0: exit the shell
