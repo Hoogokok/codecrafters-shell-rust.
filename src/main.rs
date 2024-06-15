@@ -35,6 +35,10 @@ fn process_command(command_parts: Vec<&str>, command: &str) -> ControlFlow<()> {
         }
         "type" => {
             identify_command(command_parts[1..].to_vec());
+        },
+        "pwd" => {
+            let current_dir = env::current_dir().unwrap();
+            println!("{}", current_dir.display());
         }
         _ => {
             //외부 명령어 실행
